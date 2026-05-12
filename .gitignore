@@ -1,0 +1,16 @@
+.DS_Store
+DerivedData/
+build/
+
+# Xcode user-specific state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# CocoaPods / Carthage, if added later
+Pods/
+Carthage/Build/
