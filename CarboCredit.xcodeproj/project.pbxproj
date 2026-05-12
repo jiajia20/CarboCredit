@@ -12,6 +12,7 @@
 		4D0000010000000000000003 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0000010000000000000013 /* AppStore.swift */; };
 		4D0000010000000000000004 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0000010000000000000014 /* Theme.swift */; };
 		4D0000010000000000000005 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0000010000000000000015 /* ContentView.swift */; };
+		4D0000010000000000000006 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D0000010000000000000016 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +22,7 @@
 		4D0000010000000000000013 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		4D0000010000000000000014 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		4D0000010000000000000015 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		4D0000010000000000000016 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +48,7 @@
 			isa = PBXGroup;
 			children = (
 				4D0000010000000000000011 /* CarboCreditApp.swift */,
+				4D0000010000000000000016 /* Assets.xcassets */,
 				4D0000010000000000000033 /* Models */,
 				4D0000010000000000000034 /* Store */,
 				4D0000010000000000000035 /* Views */,
@@ -144,6 +147,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D0000010000000000000006 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -283,6 +287,7 @@
 		4D0000010000000000000071 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -310,6 +315,7 @@
 		4D0000010000000000000072 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
