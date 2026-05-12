@@ -15,7 +15,7 @@ final class CarboCreditStore: ObservableObject {
             goals = decoded.goals
             logEntries = decoded.logEntries
             recipes = decoded.recipes
-            bodyMeasurements = decoded.bodyMeasurements
+            bodyMeasurements = decoded.bodyMeasurements.map(Self.metricizedMeasurement)
         } else {
             let seed = CarboCreditStore.seedData()
             goals = seed.goals
@@ -46,6 +46,11 @@ final class CarboCreditStore: ObservableObject {
     func deleteLogEntries(at offsets: IndexSet, from entries: [FoodLogEntry]) {
         let idsToDelete = Set(offsets.map { entries[$0].id })
         logEntries.removeAll { idsToDelete.contains($0.id) }
+        save()
+    }
+
+    func deleteLogEntry(_ entry: FoodLogEntry) {
+        logEntries.removeAll { $0.id == entry.id }
         save()
     }
 
@@ -124,8 +129,8 @@ final class CarboCreditStore: ObservableObject {
         ]
 
         let measurements = [
-            BodyMeasurement(date: today, weight: 146.8, waist: 30.5),
-            BodyMeasurement(date: Calendar.current.date(byAdding: .day, value: -7, to: today) ?? today, weight: 147.6, waist: 30.8)
+            BodyMeasurement(date: today, weight: 66.6, waist: 77.5),
+            BodyMeasurement(date: Calendar.current.date(byAdding: .day, value: -7, to: today) ?? today, weight: 67.0, waist: 78.2)
         ]
 
         return CarboCreditData(
@@ -133,6 +138,15 @@ final class CarboCreditStore: ObservableObject {
             logEntries: logs,
             recipes: recipes,
             bodyMeasurements: measurements
+        )
+    }
+
+    private static func metricizedMeasurement(_ measurement: BodyMeasurement) -> BodyMeasurement {
+        BodyMeasurement(
+            id: measurement.id,
+            date: measurement.date,
+            weight: measurement.weight > 120 ? measurement.weight / 2.20462 : measurement.weight,
+            waist: measurement.waist < 70 ? measurement.waist * 2.54 : measurement.waist
         )
     }
 }

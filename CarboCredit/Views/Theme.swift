@@ -6,6 +6,7 @@ enum CarboTheme {
     static let surfaceStrong = Color(red: 0.898, green: 0.855, blue: 0.800)
     static let text = Color(red: 0.184, green: 0.169, blue: 0.145)
     static let mutedText = Color(red: 0.427, green: 0.396, blue: 0.345)
+    static let tabUnselected = Color(red: 0.514, green: 0.443, blue: 0.345)
     static let accent = Color(red: 0.471, green: 0.525, blue: 0.420)
     static let protein = Color(red: 0.435, green: 0.529, blue: 0.588)
     static let caution = Color(red: 0.722, green: 0.541, blue: 0.267)

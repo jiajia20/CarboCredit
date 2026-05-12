@@ -1,8 +1,13 @@
 import SwiftUI
 import PhotosUI
+import Charts
 
 struct ContentView: View {
     @EnvironmentObject private var store: CarboCreditStore
+
+    init() {
+        UITabBar.appearance().unselectedItemTintColor = UIColor(CarboTheme.tabUnselected)
+    }
 
     var body: some View {
         TabView {
@@ -103,8 +108,8 @@ struct TodayView: View {
             }
 
             HStack(spacing: 12) {
-                MeasurementTile(title: "Weight", value: store.latestMeasurement?.weight.clean ?? "-", unit: "lb")
-                MeasurementTile(title: "Waist", value: store.latestMeasurement?.waist.clean ?? "-", unit: "in")
+                MeasurementTile(title: "Weight", value: store.latestMeasurement?.weight.clean ?? "-", unit: "kg")
+                MeasurementTile(title: "Waist", value: store.latestMeasurement?.waist.clean ?? "-", unit: "cm")
             }
         }
         .foregroundStyle(CarboTheme.text)
@@ -344,38 +349,92 @@ struct SnapMealView: View {
 
 struct LogView: View {
     @EnvironmentObject private var store: CarboCreditStore
-    @State private var filter = "All"
-    private let filters = ["All", "Manual", "Snack", "Meal Prep", "Eating Out", "Recipe"]
+    @State private var filter = LogFilter.all
 
     var filteredEntries: [FoodLogEntry] {
         store.logEntries.filter { entry in
-            filter == "All" || entry.source.rawValue == filter || (filter == "Meal" && entry.source == .recipe)
+            filter.matches(entry)
         }
     }
 
     var body: some View {
         NavigationStack {
-            List {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
                 TodaySummaryStrip(nutrition: store.todayNutrition, goals: store.goals)
-                    .listRowBackground(CarboTheme.background)
 
                 Picker("Filter", selection: $filter) {
-                    ForEach(filters, id: \.self) { Text($0).tag($0) }
+                    ForEach(LogFilter.allCases) { filter in
+                        Image(systemName: filter.icon)
+                            .tag(filter)
+                            .accessibilityLabel(filter.title)
+                    }
                 }
                 .pickerStyle(.segmented)
-                .listRowBackground(CarboTheme.background)
 
-                ForEach(filteredEntries) { entry in
-                    LogRow(entry: entry)
-                        .listRowBackground(CarboTheme.surface)
+                    LazyVStack(spacing: 10) {
+                        ForEach(filteredEntries) { entry in
+                            LogRow(entry: entry) {
+                                store.deleteLogEntry(entry)
+                            }
+                                .cardStyle()
+                        }
+                    }
                 }
-                .onDelete { offsets in
-                    store.deleteLogEntries(at: offsets, from: filteredEntries)
-                }
+                .padding()
             }
-            .scrollContentBackground(.hidden)
             .background(CarboTheme.background)
             .navigationTitle("Log")
+        }
+    }
+}
+
+enum LogFilter: String, CaseIterable, Identifiable {
+    case all
+    case manual
+    case snack
+    case mealPrep
+    case eatingOut
+    case recipe
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all: "All"
+        case .manual: "Manual"
+        case .snack: "Snack"
+        case .mealPrep: "Meal Prep"
+        case .eatingOut: "Eating Out"
+        case .recipe: "Recipe"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .all: "square.grid.2x2"
+        case .manual: "square.and.pencil"
+        case .snack: "birthday.cake"
+        case .mealPrep: "takeoutbag.and.cup.and.straw"
+        case .eatingOut: "camera"
+        case .recipe: "plus.rectangle.on.rectangle"
+        }
+    }
+
+    func matches(_ entry: FoodLogEntry) -> Bool {
+        switch self {
+        case .all:
+            true
+        case .manual:
+            entry.source == .manual
+        case .snack:
+            entry.source == .snack
+        case .mealPrep:
+            entry.source == .mealPrep
+        case .eatingOut:
+            entry.source == .snapMeal
+        case .recipe:
+            entry.source == .recipe
         }
     }
 }
@@ -385,18 +444,49 @@ struct TodaySummaryStrip: View {
     let goals: NutritionGoals
 
     var body: some View {
-        HStack {
-            MiniMetric(label: "C", value: "\(nutrition.carbs.clean)/\(goals.carbLimit.clean)")
-            MiniMetric(label: "P", value: "\(nutrition.protein.clean)/\(goals.proteinTarget.clean)")
-            MiniMetric(label: "Cal", value: "\(nutrition.calories.clean)/\(goals.calorieLimit.clean)")
-            MiniMetric(label: "LDL", value: "\(nutrition.ldlImpact.clean)/\(goals.ldlImpactLimit.clean)")
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Today")
+                .font(.headline)
+                .foregroundStyle(CarboTheme.text)
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                SummaryMetric(title: "Carbs", value: "\(nutrition.carbs.clean)g", goal: "\(goals.carbLimit.clean)g")
+                SummaryMetric(title: "Protein", value: "\(nutrition.protein.clean)g", goal: "\(goals.proteinTarget.clean)g")
+                SummaryMetric(title: "Calories", value: nutrition.calories.clean, goal: goals.calorieLimit.clean)
+                SummaryMetric(title: "LDL", value: nutrition.ldlImpact.clean, goal: goals.ldlImpactLimit.clean)
+            }
         }
         .cardStyle()
     }
 }
 
+struct SummaryMetric: View {
+    let title: String
+    let value: String
+    let goal: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(CarboTheme.mutedText)
+            Text(value)
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(CarboTheme.text)
+            Text("of \(goal)")
+                .font(.caption2)
+                .foregroundStyle(CarboTheme.mutedText)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(8)
+        .background(CarboTheme.background)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+}
+
 struct LogRow: View {
     let entry: FoodLogEntry
+    let delete: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -428,6 +518,15 @@ struct LogRow: View {
                     MiniMetric(label: "LDL", value: entry.nutrition.ldlImpact.clean)
                 }
             }
+
+            Button(action: delete) {
+                Image(systemName: "trash")
+                    .font(.caption.weight(.semibold))
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(.bordered)
+            .tint(CarboTheme.tabUnselected)
+            .accessibilityLabel("Delete \(entry.name)")
         }
         .foregroundStyle(CarboTheme.text)
         .padding(.vertical, 6)
@@ -492,6 +591,7 @@ struct RecipesView: View {
 struct RecipeRow: View {
     let recipe: Recipe
     let log: () -> Void
+    @State private var didLog = false
 
     var body: some View {
         HStack {
@@ -503,9 +603,23 @@ struct RecipeRow: View {
                     .foregroundStyle(CarboTheme.mutedText)
             }
             Spacer()
-            Button("Log", action: log)
+            Button {
+                log()
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                    didLog = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        didLog = false
+                    }
+                }
+            } label: {
+                Label(didLog ? "Logged" : "Log", systemImage: didLog ? "checkmark" : "plus")
+                    .labelStyle(.titleAndIcon)
+            }
                 .buttonStyle(.borderedProminent)
-                .tint(CarboTheme.accent)
+                .tint(didLog ? CarboTheme.protein : CarboTheme.accent)
+                .scaleEffect(didLog ? 1.04 : 1)
         }
         .foregroundStyle(CarboTheme.text)
         .listRowBackground(CarboTheme.surface)
@@ -578,39 +692,113 @@ struct RecipeBuilderView: View {
 struct TrendsView: View {
     @EnvironmentObject private var store: CarboCreditStore
 
+    private var measurements: [BodyMeasurement] {
+        store.bodyMeasurements.sorted { $0.date < $1.date }
+    }
+
     var body: some View {
         NavigationStack {
-            List {
-                Section("Measurements") {
-                    ForEach(store.bodyMeasurements) { measurement in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    MeasurementChartCard(
+                        title: "Weight",
+                        unit: "kg",
+                        color: CarboTheme.protein,
+                        measurements: measurements,
+                        value: \.weight
+                    )
+
+                    MeasurementChartCard(
+                        title: "Waist",
+                        unit: "cm",
+                        color: CarboTheme.accent,
+                        measurements: measurements,
+                        value: \.waist
+                    )
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Measurements")
+                            .font(.headline)
+                        ForEach(measurements.reversed()) { measurement in
                         HStack {
                             Text(measurement.date, style: .date)
                             Spacer()
-                            Text("\(measurement.weight.clean) lb")
-                            Text("\(measurement.waist.clean) in")
+                                Text("\(measurement.weight.clean) kg")
+                                Text("\(measurement.waist.clean) cm")
+                        }
+                            .font(.subheadline)
+                            .foregroundStyle(CarboTheme.text)
+                            .padding(10)
+                            .background(CarboTheme.surface)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         }
                     }
+                    .foregroundStyle(CarboTheme.text)
                 }
+                .padding()
             }
-            .scrollContentBackground(.hidden)
             .background(CarboTheme.background)
             .navigationTitle("Progress")
         }
     }
 }
 
+struct MeasurementChartCard: View {
+    let title: String
+    let unit: String
+    let color: Color
+    let measurements: [BodyMeasurement]
+    let value: KeyPath<BodyMeasurement, Double>
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(title)
+                    .font(.headline)
+                Spacer()
+                if let latest = measurements.last {
+                    Text("\(latest[keyPath: value].clean) \(unit)")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(CarboTheme.mutedText)
+                }
+            }
+
+            Chart(measurements) { measurement in
+                LineMark(
+                    x: .value("Date", measurement.date),
+                    y: .value(title, measurement[keyPath: value])
+                )
+                .foregroundStyle(color)
+                .interpolationMethod(.catmullRom)
+
+                PointMark(
+                    x: .value("Date", measurement.date),
+                    y: .value(title, measurement[keyPath: value])
+                )
+                .foregroundStyle(color)
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading)
+            }
+            .frame(height: 170)
+        }
+        .foregroundStyle(CarboTheme.text)
+        .cardStyle()
+    }
+}
+
 struct MeasurementEntryView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: CarboCreditStore
-    @State private var weight = 146.8
-    @State private var waist = 30.5
+    @State private var weight = 66.6
+    @State private var waist = 77.5
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Weekly Check-In") {
-                    Stepper("Weight \(weight.clean) lb", value: $weight, in: 80...260, step: 0.2)
-                    Stepper("Waist \(waist.clean) in", value: $waist, in: 20...60, step: 0.1)
+                    Stepper("Weight \(weight.clean) kg", value: $weight, in: 35...180, step: 0.1)
+                    Stepper("Waist \(waist.clean) cm", value: $waist, in: 50...180, step: 0.5)
                 }
 
                 Button {
@@ -637,22 +825,58 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section("Daily Goals") {
-                    Stepper("Carb limit \(store.goals.carbLimit.clean)g", value: $store.goals.carbLimit, in: 50...400, step: 5)
-                    Stepper("Protein target \(store.goals.proteinTarget.clean)g", value: $store.goals.proteinTarget, in: 40...240, step: 5)
-                    Stepper("Calorie limit \(store.goals.calorieLimit.clean)", value: $store.goals.calorieLimit, in: 1000...4000, step: 50)
-                    Stepper("LDL impact limit \(store.goals.ldlImpactLimit.clean)", value: $store.goals.ldlImpactLimit, in: 1...40, step: 1)
+                    NumericGoalRow(title: "Carb limit", unit: "g", value: $store.goals.carbLimit, range: 50...400, step: 5)
+                    NumericGoalRow(title: "Protein target", unit: "g", value: $store.goals.proteinTarget, range: 40...240, step: 5)
+                    NumericGoalRow(title: "Calorie limit", unit: "", value: $store.goals.calorieLimit, range: 1000...4000, step: 50)
+                    NumericGoalRow(title: "LDL impact limit", unit: "", value: $store.goals.ldlImpactLimit, range: 1...40, step: 1)
                 }
 
                 Section("Weekly Credits") {
-                    Stepper("Weekly carbs \(store.goals.weeklyCarbLimit.clean)g", value: $store.goals.weeklyCarbLimit, in: 200...2500, step: 25)
-                    Stepper("Weekly calories \(store.goals.weeklyCalorieLimit.clean)", value: $store.goals.weeklyCalorieLimit, in: 5000...25000, step: 100)
+                    NumericGoalRow(title: "Weekly carbs", unit: "g", value: $store.goals.weeklyCarbLimit, range: 200...2500, step: 25)
+                    NumericGoalRow(title: "Weekly calories", unit: "", value: $store.goals.weeklyCalorieLimit, range: 5000...25000, step: 100)
                 }
             }
-            .onChange(of: store.goals) { _ in store.save() }
+            .onChange(of: store.goals) { store.save() }
             .scrollContentBackground(.hidden)
             .background(CarboTheme.background)
             .navigationTitle("Settings")
         }
+    }
+}
+
+struct NumericGoalRow: View {
+    let title: String
+    let unit: String
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+
+            HStack {
+                TextField(title, value: $value, format: .number.precision(.fractionLength(0...1)))
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 110)
+                    .onChange(of: value) {
+                        value = min(max(value, range.lowerBound), range.upperBound)
+                    }
+
+                if !unit.isEmpty {
+                    Text(unit)
+                        .foregroundStyle(CarboTheme.mutedText)
+                }
+
+                Spacer()
+
+                Stepper(title, value: $value, in: range, step: step)
+                    .labelsHidden()
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 

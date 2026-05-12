@@ -87,7 +87,7 @@ Today
 │ Body Check-In              Log   │
 │ ┌──────────────┐ ┌─────────────┐ │
 │ │ Weight       │ │ Waist       │ │
-│ │ 146.8 lb     │ │ 30.5 in     │ │
+│ │ 66.6 kg      │ │ 77.5 cm     │ │
 │ └──────────────┘ └─────────────┘ │
 │                                  │
 │ Quick Add                        │
@@ -182,8 +182,8 @@ The persisted payload is conceptually:
     {
       "id": "UUID",
       "date": "2026-05-12T19:00:00Z",
-      "weight": 146.8,
-      "waist": 30.5
+      "weight": 66.6,
+      "waist": 77.5
     }
   ]
 }
@@ -194,7 +194,7 @@ The persisted payload is conceptually:
 - `Nutrition` is additive and used for daily totals, recipe totals, and per-serving calculations.
 - `LogSource` values are user-facing raw strings: `Eating Out`, `Meal Prep`, `Manual`, `Snack`, and `Recipe`.
 - `Recipe.perServingNutrition` divides total ingredient nutrition by `servings`.
-- `BodyMeasurement` currently tracks weight in pounds and waist in inches.
+- `BodyMeasurement` currently tracks weight in kilograms and waist in centimeters.
 - `ldlImpact` is an app-specific numeric heuristic, not a clinical measurement.
 
 ## Development
