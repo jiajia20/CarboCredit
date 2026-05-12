@@ -56,6 +56,57 @@ CarboCredit/
     Theme.swift                 Shared colors, card style, number formatting
 ```
 
+## Current Mockup
+
+The latest implemented mockup is a five-tab SwiftUI app with a warm, card-based nutrition dashboard.
+
+```text
+Today
+┌──────────────────────────────────┐
+│ CarboCredit                      │
+│                                  │
+│ Build Up                         │
+│ ┌──────────────────────────────┐ │
+│ │ Protein        61g / 120g    │ │
+│ │ [==========----------]       │ │
+│ │ 59g to target                │ │
+│ └──────────────────────────────┘ │
+│                                  │
+│ Stay Under                       │
+│ ┌──────────────┐ ┌─────────────┐ │
+│ │ Carb Credits │ │ Calories    │ │
+│ │ 129g / 160g  │ │ 1235 / 2000 │ │
+│ │ 31g left     │ │ 765 left    │ │
+│ └──────────────┘ └─────────────┘ │
+│ ┌──────────────┐                 │
+│ │ LDL Impact   │                 │
+│ │ 9 / 12       │                 │
+│ │ 3 left       │                 │
+│ └──────────────┘                 │
+│                                  │
+│ Body Check-In              Log   │
+│ ┌──────────────┐ ┌─────────────┐ │
+│ │ Weight       │ │ Waist       │ │
+│ │ 146.8 lb     │ │ 30.5 in     │ │
+│ └──────────────┘ └─────────────┘ │
+│                                  │
+│ Quick Add                        │
+│ [Snap Meal] [Manual]             │
+│ [Meal Prep] [Snack]              │
+│ [Recipe]                         │
+└──────────────────────────────────┘
+
+Tabs: Today | Log | Recipes | Progress | Settings
+```
+
+### Screen Map
+
+- `Today`: daily budget dashboard, body check-in summary, and quick-add actions.
+- `Log`: daily summary strip, source filter, log rows, and swipe-to-delete.
+- `Recipes`: meal prep shortcuts, all recipes, and recipe logging.
+- `Progress`: weight and waist measurement history.
+- `Settings`: daily and weekly nutrition goals.
+
 ### State Management
 
 - `CarboCreditStore` is the app-level `ObservableObject`.
